@@ -1,0 +1,62 @@
+Install Linux, Nginx, MySQL, PHP (LEMP) on Ubuntu 20.04
+24-05-2021
+
+# Tried on Amazon Web Service (AWS)
+$ sudo apt update
+$ sudo apt upgrade
+$ sudo useradd linuxharbour -m -s /bin/bash -G sudo
+$ sudo passwd linuxharbour
+$ sudo hostnamectl set-hostname amazon1.linuxharbour.com
+$ sudo apt install net-tools
+$ sudo apt install nginx
+$ sduo apt install mysql-server
+## Do MySQL Secure Installation ##
+# - do not enable VALIDATE PASSWORD PLUGIN.
+# - disable annoymous.
+# - remove test account.
+# - limit localhost only.
+$ sudo mysql_secure_installation
+$ sudo apt install php-fpm php-mysql
+$ sudo vim /etc/nginx/sites-available/amazon1.linuxharbour.com
+server {
+    listen 443 ssl;
+    ssl on;
+    server_name amazon1.linuxharbour.com;
+    ssl_certificate /etc/nginx/ssl/amazon1.crt;
+    ssl_certificate_key /etc/nginx/ssl/amazon1.key;
+    root /var/www/amazon1.linuxharbour.com;
+
+    index index.html index.htm index.php;
+
+    location / {
+        try_files $uri $uri/ =404;
+    }
+
+    location ~ \.php$ {
+        include snippets/fastcgi-php.conf;
+        fastcgi_pass unix:/var/run/php/php7.4-fpm.sock;
+     }
+
+    location ~ /\.ht {
+        deny all;
+    }
+}
+server {
+    listen 80;
+    server_name amazon1.linuxharbour.com;
+    rewrite ^(.*) https://$host$1 permanent;
+}
+
+$ sudo ln -s /etc/nginx/sites-available/amazon1.linuxharbour.com /etc/nginx/sites-enabled/
+# add <?php phpinfo(); ?>
+# Test http://amazon1.linuxharbour.com/testphp.php
+$ sudo vim /var/www/amazon1.linuxharbour.com/testphp.php
+# MySQL create DB and User
+$ mysql
+# CREATE USER 'newuser'@'localhost' IDENTIFIED BY 'password';
+# CREATE DATABASE 'newdb';
+# GRANT ALL PRIVILEGES ON newdb.* TO 'newuser'@'localhost';
+
+References:
+* https://www.digitalocean.com/community/tutorials/how-to-install-linux-nginx-mysql-php-lemp-stack-on-ubuntu-20-04
+* https://www.digitalocean.com/community/tutorials/how-to-host-a-website-using-cloudflare-and-nginx-on-ubuntu-16-04
